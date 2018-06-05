@@ -10,7 +10,9 @@ import java.util.List;
 
 import it.polito.tdp.formulaone.model.Circuit;
 import it.polito.tdp.formulaone.model.Constructor;
+import it.polito.tdp.formulaone.model.Driver;
 import it.polito.tdp.formulaone.model.Season;
+import it.polito.tdp.formulaone.model.Vittorie;
 
 
 public class FormulaOneDAO {
@@ -52,7 +54,7 @@ public class FormulaOneDAO {
 			
 			List<Season> list = new ArrayList<>() ;
 			while(rs.next()) {
-				list.add(new Season(Year.of(rs.getInt("year")), rs.getString("url"))) ;
+				list.add(new Season(rs.getInt("year"), rs.getString("url"))) ;
 			}
 			
 			conn.close();
@@ -106,6 +108,59 @@ public class FormulaOneDAO {
 
 			conn.close();
 			return constructors;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Query Error");
+		}
+	}
+
+	public List<Driver> getAllDriversBySeason(Season s) {
+		
+		String sql = "SELECT DISTINCT drivers.driverId, forename, surname FROM drivers, races, results WHERE races.year= ? AND results.raceId=drivers.raceId AND results.driverId=drivers.driverId";
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, s.getYear());
+			
+			ResultSet rs = st.executeQuery();
+
+			List<Driver> drivers = new ArrayList<>();
+			while (rs.next()) {
+				drivers.add(new Driver(rs.getInt("driverId"), rs.getString("forename"), rs.getString("surname")));
+			}
+
+			conn.close();
+			return drivers;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Query Error");
+		}
+	}
+	
+public List<Vittorie> getDriversBySeason(Season s) {
+		
+		String sql = "SELECT r1.driverId, r2.driverId, COUNT(*) as vittorie "
+				+ "FROM races, results as r1, results as r2 WHERE races.year= ? "
+				+ "AND races.raceId=r1.raceId AND r1.raceId=r2.raceId AND r1.position>r2.position "
+				+ "GROUP BY r1.driverId, r2.driverId";
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, s.getYear());
+			
+			ResultSet rs = st.executeQuery();
+
+			List<Vittorie> list = new ArrayList<>();
+			while (rs.next()) {
+				list.add(new Vittorie(rs.getInt("r1.driverId"), rs.getInt("r2.driverId"), rs.getInt("vittorie")));
+			}
+
+			conn.close();
+			return list;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("SQL Query Error");
