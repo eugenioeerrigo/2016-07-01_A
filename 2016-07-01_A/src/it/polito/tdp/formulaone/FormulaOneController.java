@@ -1,8 +1,10 @@
 package it.polito.tdp.formulaone;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.formulaone.model.Driver;
 import it.polito.tdp.formulaone.model.Model;
 import it.polito.tdp.formulaone.model.Season;
 import javafx.event.ActionEvent;
@@ -32,14 +34,20 @@ public class FormulaOneController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	txtResult.clear();
     	try {
     		
     		Season s = boxAnno.getValue();
-    		if(s!=null) {
+    		if(s==null) {
     			txtResult.appendText("Selezionare una stagione!");
     			return;
     		}
     		model.creaGrafo(s);
+    		txtResult.appendText("Grafo creato!\n");
+    		
+    		Driver d = model.getBestDriver();
+    		txtResult.appendText("Miglior pilota per quella stagione: "+ d.getForename()+ " "+d.getSurname());
+    		
     		
     	}catch(RuntimeException e) {
     		e.printStackTrace();
@@ -50,6 +58,28 @@ public class FormulaOneController {
 
     @FXML
     void doTrovaDreamTeam(ActionEvent event) {
+    	try {
+    		try {
+    			int k = Integer.parseInt(textInputK.getText());
+    			
+    			if(k<=0) {
+    				txtResult.appendText("Inserire K > 0");
+    				return;
+    			}
+    			
+    			List<Driver> team = model.getDreamTeam(k);
+    			txtResult.appendText("\n\nBest DREAM TEAM of the season\n");
+    			for(Driver d : team)
+    				txtResult.appendText(d.toString()+"\n");
+    			
+    		}catch(NumberFormatException n) {
+    			txtResult.appendText("Inserire K > 0");
+    			return;
+    		}
+    		
+    	}catch(RuntimeException e) {
+    		txtResult.appendText("\nErrore di connessione al DB");
+    	}
 
     }
 

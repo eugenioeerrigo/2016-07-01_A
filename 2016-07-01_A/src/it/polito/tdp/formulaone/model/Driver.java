@@ -60,7 +60,7 @@ public class Driver {
 
 	@Override
 	public String toString() {
-		return "Driver [driverId=" + driverId + ", forename=" + forename + ", surname=" + surname + "]";
+		return String.format("%s %s", forename, surname);
 	}
 
 	

@@ -2,30 +2,30 @@ package it.polito.tdp.formulaone.model;
 
 public class Vittorie {
 	
-	private int driver1Id;
-	private int driver2Id;
+	private Driver d1;
+	private Driver d2;
 	private int vittorie;
 	
-	public Vittorie(int driver1Id, int driver2Id, int vittorie) {
-		this.driver1Id = driver1Id;
-		this.driver2Id = driver2Id;
+	public Vittorie(Driver d1, Driver d2, int vittorie) {
+		this.d1 = d1;
+		this.d2 = d2;
 		this.vittorie = vittorie;
 	}
 
-	public int getDriver1Id() {
-		return driver1Id;
+	public Driver getD1() {
+		return d1;
 	}
 
-	public void setDriver1Id(int driver1Id) {
-		this.driver1Id = driver1Id;
+	public void setD1(Driver d1) {
+		this.d1 = d1;
 	}
 
-	public int getDriver2Id() {
-		return driver2Id;
+	public Driver getD2() {
+		return d2;
 	}
 
-	public void setDriver2Id(int driver2Id) {
-		this.driver2Id = driver2Id;
+	public void setD2(Driver d2) {
+		this.d2 = d2;
 	}
 
 	public int getVittorie() {
@@ -35,6 +35,8 @@ public class Vittorie {
 	public void setVittorie(int vittorie) {
 		this.vittorie = vittorie;
 	}
+	
+	
 	
 	
 	

@@ -11,6 +11,7 @@ import java.util.List;
 import it.polito.tdp.formulaone.model.Circuit;
 import it.polito.tdp.formulaone.model.Constructor;
 import it.polito.tdp.formulaone.model.Driver;
+import it.polito.tdp.formulaone.model.DriverIdMap;
 import it.polito.tdp.formulaone.model.Season;
 import it.polito.tdp.formulaone.model.Vittorie;
 
@@ -114,9 +115,11 @@ public class FormulaOneDAO {
 		}
 	}
 
-	public List<Driver> getAllDriversBySeason(Season s) {
+	public List<Driver> getAllDriversBySeason(Season s, DriverIdMap map) {
 		
-		String sql = "SELECT DISTINCT drivers.driverId, forename, surname FROM drivers, races, results WHERE races.year= ? AND results.raceId=drivers.raceId AND results.driverId=drivers.driverId";
+		String sql = "SELECT DISTINCT drivers.driverId, forename, surname FROM drivers, races, results "
+				+ "WHERE races.year= ? AND results.raceId=races.raceId AND results.driverId=drivers.driverId "
+				+ "AND results.position IS NOT NULL";
 
 		try {
 			Connection conn = ConnectDB.getConnection();
@@ -128,7 +131,7 @@ public class FormulaOneDAO {
 
 			List<Driver> drivers = new ArrayList<>();
 			while (rs.next()) {
-				drivers.add(new Driver(rs.getInt("driverId"), rs.getString("forename"), rs.getString("surname")));
+				drivers.add(map.get(new Driver(rs.getInt("driverId"), rs.getString("forename"), rs.getString("surname"))));
 			}
 
 			conn.close();
@@ -139,11 +142,13 @@ public class FormulaOneDAO {
 		}
 	}
 	
-public List<Vittorie> getDriversBySeason(Season s) {
+public List<Vittorie> getDriversBySeason(Season s, DriverIdMap map) {
 		
 		String sql = "SELECT r1.driverId, r2.driverId, COUNT(*) as vittorie "
 				+ "FROM races, results as r1, results as r2 WHERE races.year= ? "
-				+ "AND races.raceId=r1.raceId AND r1.raceId=r2.raceId AND r1.position>r2.position "
+				+ "AND races.raceId=r1.raceId AND r1.raceId=r2.raceId "
+				+ "AND r1.position<r2.position AND r1.position IS NOT NULL "
+				+ "AND r2.position IS NOT NULL "
 				+ "GROUP BY r1.driverId, r2.driverId";
 
 		try {
@@ -156,7 +161,13 @@ public List<Vittorie> getDriversBySeason(Season s) {
 
 			List<Vittorie> list = new ArrayList<>();
 			while (rs.next()) {
-				list.add(new Vittorie(rs.getInt("r1.driverId"), rs.getInt("r2.driverId"), rs.getInt("vittorie")));
+				Driver d1 = map.get(rs.getInt("r1.driverId"));
+				Driver d2 = map.get(rs.getInt("r2.driverId"));
+				
+				if(d1==null || d2==null) {
+					System.err.format("Skipping %d %d\n", rs.getInt("r1.driverId"), rs.getInt("r2.driverId"));
+				}else
+					list.add(new Vittorie(d1, d2, rs.getInt("vittorie")));
 			}
 
 			conn.close();
