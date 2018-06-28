@@ -1,9 +1,13 @@
 package it.polito.tdp.formulaone;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.formulaone.model.Driver;
+import it.polito.tdp.formulaone.model.DriversPair;
 import it.polito.tdp.formulaone.model.Model;
+import it.polito.tdp.formulaone.model.Season;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
@@ -12,7 +16,7 @@ import javafx.scene.control.TextField;
 
 public class FormulaOneController {
 	
-	Model model;
+	private Model model;
 
     @FXML
     private ResourceBundle resources;
@@ -21,7 +25,7 @@ public class FormulaOneController {
     private URL location;
 
     @FXML
-    private ComboBox<?> boxAnno;
+    private ComboBox<Season> boxAnno;
 
     @FXML
     private TextField textInputK;
@@ -31,12 +35,31 @@ public class FormulaOneController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	txtResult.clear();
+    	
+    	model.creaGrafo(boxAnno.getValue());
+    	
+    	DriversPair bestDriver = model.bestDriver();
+    	txtResult.appendText("Pilota col miglior punteggio: "+bestDriver.getDriver1()+" - "+bestDriver.getNum());
 
     }
 
     @FXML
     void doTrovaDreamTeam(ActionEvent event) {
-
+    	txtResult.clear();
+    	
+    	try {
+			int dim = Integer.parseInt(this.textInputK.getText());
+			
+			txtResult.appendText("DREAM TEAM\n");
+			List<Driver> results = model.dreamTeam(dim);
+			
+			for(Driver d : results)
+				txtResult.appendText(d.toString()+"\n");
+			
+		} catch (NumberFormatException e) {
+			txtResult.appendText("Inserire un valore numerico valido");
+		}
     }
 
     @FXML
@@ -49,5 +72,8 @@ public class FormulaOneController {
     
     public void setModel(Model model){
     	this.model = model;
+    	
+    	this.boxAnno.getItems().addAll(model.getAllSeasons());
     }
+    
 }

@@ -10,6 +10,9 @@ import java.util.List;
 
 import it.polito.tdp.formulaone.model.Circuit;
 import it.polito.tdp.formulaone.model.Constructor;
+import it.polito.tdp.formulaone.model.Driver;
+import it.polito.tdp.formulaone.model.DriversIdMap;
+import it.polito.tdp.formulaone.model.DriversPair;
 import it.polito.tdp.formulaone.model.Season;
 
 
@@ -29,6 +32,38 @@ public class FormulaOneDAO {
 			List<Integer> list = new ArrayList<>() ;
 			while(rs.next()) {
 				list.add(rs.getInt("year"));
+			}
+			
+			conn.close();
+			return list ;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Query Error");
+		}
+	}
+	
+public List<Driver> getDrivers(Season season, DriversIdMap dmap) {
+		
+		String sql = "SELECT DISTINCT d.driverId, driverRef, d.number, code, forename, surname, dob, nationality, d.url "
+				+ "FROM results as r, races as s, drivers as d "
+				+ "WHERE r.raceId=s.raceId AND d.driverId=r.driverId AND s.year = ? AND r.position IS NOT NULL "
+				+ "ORDER BY d.driverid" ;
+		
+		try {
+			Connection conn = ConnectDB.getConnection() ;
+
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			st.setInt(1, season.getYear().getValue());
+			
+			ResultSet rs = st.executeQuery() ;
+			
+			List<Driver> list = new ArrayList<>() ;
+			
+			while(rs.next()) {
+				Driver driver = new Driver(rs.getInt("d.driverid"), rs.getString("driverRef"), rs.getInt("d.number"),
+											rs.getString("code"), rs.getString("forename"), rs.getString("surname"),
+											rs.getDate("dob").toLocalDate(), rs.getString("nationality"), rs.getString("d.url"));
+				list.add(dmap.get(driver));
 			}
 			
 			conn.close();
@@ -112,4 +147,38 @@ public class FormulaOneDAO {
 		}
 	}
 	
+	public List<DriversPair> getDriversPair(Season season, DriversIdMap dmap) {
+
+		String sql = "SELECT r1.driverId as d1, r2.driverId as d2, COUNT(*) as peso "
+				+ "FROM results as r1, results as r2, races as d WHERE r1.raceId=r2.raceId "
+				+ "AND r1.driverId<>r2.driverId AND r1.raceId=d.raceId AND r1.position>r2.position "
+				+ "AND d.year = ? GROUP BY r1.driverId, r2.driverId";
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, season.getYear().getValue());
+			
+			ResultSet rs = st.executeQuery();
+
+			List<DriversPair> list = new ArrayList<>();
+			
+			while (rs.next()) {
+				Driver d1 = dmap.get(rs.getInt("d1"));
+				Driver d2 = dmap.get(rs.getInt("d2"));
+				if(d1!=null && d2!=null) {
+					DriversPair dp = new DriversPair(d1, d2, rs.getInt("peso"));
+					list.add(dp);
+				}
+			}
+
+			conn.close();
+			return list;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Query Error");
+		}
+	}
 }
